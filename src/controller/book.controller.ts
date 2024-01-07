@@ -1,9 +1,16 @@
 import { Request, Response, NextFunction } from "express"
 import { Book } from "../entity/book.entity";
 import { AppDataSource } from "../database/app-data-source";
+import { createBookSchema } from "../validator/book.validator";
 
 export const createBook = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { error, value } = createBookSchema.validate(req.body);
+
+        if (error) {
+            return res.status(400).json({ status: 'fail', msg: error.details[0].message });
+        }
+
         const book = new Book();
         book.name = req.body.name;
         const bookRepository = await AppDataSource.getRepository(Book);

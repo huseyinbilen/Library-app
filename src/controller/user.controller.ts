@@ -3,9 +3,16 @@ import { User } from "../entity/user.entity";
 import { AppDataSource } from "../database/app-data-source";
 import { Book } from "../entity/book.entity";
 import { Score } from "../entity/score.entity";
+import { createUserSchema, returnBookSchema } from "../validator/user.validator";
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { error, value } = createUserSchema.validate(req.body);
+
+        if (error) {
+            return res.status(400).json({ status: 'fail', msg: error.details[0].message });
+        }
+
         const user = new User();
         user.name = req.body.name;
         const userRepository = await AppDataSource.getRepository(User);
@@ -127,6 +134,12 @@ export const borrowBook = async (req: Request, res: Response) => {
 
 export const returnBook = async (req: Request, res: Response) => {
     try {
+        const { error, value } = returnBookSchema.validate(req.body);
+
+        if (error) {
+            return res.status(400).json({ status: 'fail', msg: error.details[0].message });
+        }
+
         // converting param to number and param must be positive
         const userId = parseInt(req.params.userId, 10);
 
