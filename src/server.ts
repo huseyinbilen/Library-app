@@ -6,7 +6,7 @@ AppDataSource
     .initialize()
     .then(result=>{        
         if(result){
-            void app.listen({host:"0.0.0.0",port:8000})
+            void app.listen({host:"0.0.0.0",port:3000})
             console.log(`App Started Succesfully!`);
             return {connectionStatus:true}
         }
