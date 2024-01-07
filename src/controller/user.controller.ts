@@ -40,9 +40,24 @@ export const getUserById = async (req: Request, res: Response) => {
             return res.status(400).json({ status: 'fail', msg: 'Invalid user ID' });
         }
 
-        const user = await userRepository.findOne({
+        let user = await userRepository.findOne({
             where: { id: userId },
         });
+
+        let past = user?.books.past;
+        let present = user?.books.present;
+
+        if(past && past.length != 0) {
+            //@ts-ignore
+            user?.books.past = await joinValues(past, userId);
+
+        }
+
+        if(present && present.length != 0) {
+            //@ts-ignore
+            user?.books.present = await joinValues(present, userId);
+
+        }
 
         if (!user) {
             return res.status(404).json({ status: 'fail', msg: 'User not found' });
@@ -243,3 +258,32 @@ export const calculateScore = async (bookId: number) => {
         return -1;
     }
 };
+
+export const joinValues = async(bookArray: number[], userId: number) => {
+    const bookRepository = await AppDataSource.getRepository(Book);
+    const scoreRepository = await AppDataSource.getRepository(Score);
+
+    const scores = await scoreRepository.createQueryBuilder('score')
+        .select(['score.bookId', 'score.scoreValue'])
+        .where('score.userId = :userId', { userId })
+        .andWhere('score.bookId IN (:...bookArray)', { bookArray })
+        .getMany();
+
+    // Get only bookIds from each score object
+    const bookIds = scores.map(score => score.bookId);
+
+    // Kitap tablosundan ad değerlerini alma
+    const books = await bookRepository.createQueryBuilder('book')
+        .select(['book.id', 'book.name'])
+        .whereInIds(bookIds)
+        .getMany();
+
+    // Find the name value corresponding to bookId in Score objects
+    const result = scores.map(score => {
+        const book = books.find(book => book.id === score.bookId);
+        return { name: book?.name, scoreValue: score.scoreValue };
+    });
+
+    console.log(result);
+    return result;
+}
