@@ -24,7 +24,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
         return res.send(savedUsers);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: "fail", msg: "User Creation Failed" });
+        res.status(500).json({ status: "fail", msg: "Users Fetching Failed" });
     }
 }
 
